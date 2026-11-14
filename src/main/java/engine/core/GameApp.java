@@ -1,10 +1,13 @@
 package engine.core;
 
+import engine.audio.Audio;
+
 import static org.lwjgl.glfw.GLFW.glfwGetTime;
 import static org.lwjgl.opengl.GL33C.*;
 
 public abstract class GameApp {
     protected Window window;
+    protected Audio audio;
     protected float clearR = 0.08f, clearG = 0.09f, clearB = 0.12f;
 
     protected abstract void init();
@@ -15,6 +18,7 @@ public abstract class GameApp {
     public final void run(String title, int width, int height) {
         window = new Window(title, width, height, true);
         try {
+            audio = new Audio();
             glEnable(GL_DEPTH_TEST);
             glEnable(GL_CULL_FACE);
             glCullFace(GL_BACK);
@@ -36,6 +40,7 @@ public abstract class GameApp {
             }
             cleanup();
         } finally {
+            if (audio != null) audio.close();
             window.close();
         }
     }

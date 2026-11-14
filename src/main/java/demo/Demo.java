@@ -3,6 +3,7 @@ package demo;
 import engine.gfx.*;
 import engine.core.*;
 import engine.scene.*;
+import game.OceanAmbienceDemo;
 import game.Player;
 import game.Raft;
 
@@ -28,6 +29,7 @@ public class Demo extends GameApp {
 
     private Entity oceanEntity;
     private Raft raft;
+    private OceanAmbienceDemo oceanSound;
 
     private final Player player = new Player();
     private boolean flying;
@@ -73,6 +75,7 @@ public class Demo extends GameApp {
         raft = new Raft(scene, shader, raftTop, raftSide, 0f, -12f);
         raft.update(0f, oceanEntity.transform.position.y);
         player.position.set(raft.deck.transform.position).add(0f, 0.5f, 0f);
+        oceanSound = new OceanAmbienceDemo();
 
         scene.camera.position.set(0, 2, 6);
         Input.captureMouse(true);
@@ -109,6 +112,9 @@ public class Demo extends GameApp {
             player.update(dt, cam, raft, oceanEntity.transform.position.y, frameTime);
         }
 
+        audio.listenTo(cam);
+        oceanSound.update(raft);
+
         for (int i = 0; i < spinners.size(); i++) {
             spinners.get(i).transform.rotate(
                     dt * (0.5f + i * 0.4f),
@@ -137,6 +143,7 @@ public class Demo extends GameApp {
         if (raftSide != null) raftSide.close();
 
         if (raft != null) raft.close();
+        if (oceanSound != null) oceanSound.close();
 
         renderer.close();
     }
