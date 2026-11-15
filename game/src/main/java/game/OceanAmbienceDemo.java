@@ -29,7 +29,7 @@ public class OceanAmbienceDemo implements AutoCloseable {
             return;
         }
 
-        source = new AudioSource().sound(sound).loop(true).gain(BASE_GAIN).rolloff(1f, REF_DIST, MAX_DIST);
+        source = new AudioSource().sound(sound).loop(true).gain(BASE_GAIN).relative(true).position(0, 0, 0);
         source.play();
     }
 

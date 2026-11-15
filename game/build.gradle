@@ -1,0 +1,34 @@
+plugins { id 'application' }
+
+def os   = System.getProperty('os.name').toLowerCase()
+def arch = System.getProperty('os.arch').toLowerCase()
+def isMac = os.contains('mac')
+def natives = os.contains('win') ? 'natives-windows'
+        : isMac ? ((arch.contains('aarch64') || arch.contains('arm')) ? 'natives-macos-arm64' : 'natives-macos')
+        : 'natives-linux'
+def imguiNatives = os.contains('win') ? 'imgui-java-natives-windows'
+        : isMac ? 'imgui-java-natives-macos'
+        : 'imgui-java-natives-linux'
+
+dependencies {
+    implementation project(':engine')
+    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+
+    runtimeOnly "org.lwjgl:lwjgl::$natives"
+    runtimeOnly "org.lwjgl:lwjgl-glfw::$natives"
+    runtimeOnly "org.lwjgl:lwjgl-opengl::$natives"
+    runtimeOnly "org.lwjgl:lwjgl-stb::$natives"
+    runtimeOnly "org.lwjgl:lwjgl-assimp::$natives"
+    runtimeOnly "org.lwjgl:lwjgl-openal::$natives"
+    runtimeOnly "io.github.spair:$imguiNatives:$imguiVersion"
+
+    implementation 'com.google.code.gson:gson:2.11.0'
+}
+
+application {
+    mainClass = 'Game'
+    applicationDefaultJvmArgs = [
+            '--enable-native-access=ALL-UNNAMED',
+            // '-Dorg.lwjgl.engine.util.Debug=true',
+    ] + (isMac ? ['-XstartOnFirstThread'] : [])
+}

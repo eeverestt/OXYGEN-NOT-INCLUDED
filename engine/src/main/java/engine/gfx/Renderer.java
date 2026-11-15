@@ -14,7 +14,6 @@ public final class Renderer implements AutoCloseable {
     private static final int DEPTH_UNIT = 2;
 
     private Framebuffer sceneFb, depthCopy, pingA, pingB;
-    private PostEffect fogEffect;
     private int fullscreenVao;
 
     private final List<PostEffect> effects = new ArrayList<>();
@@ -28,10 +27,8 @@ public final class Renderer implements AutoCloseable {
 
     public List<PostEffect> effects() { return effects; }
 
-    public PostEffect fog() { return fogEffect; }
-
     public void render(Scene scene, int width, int height, float time) {
-        if (width <= 0 || height <= 0) return; // minimised window
+        if (width <= 0 || height <= 0) return;
 
         ensureInit();
         ensureTargets(width, height);
@@ -49,14 +46,14 @@ public final class Renderer implements AutoCloseable {
         sortEntities(scene);
 
         sceneFb.bind();
-        glClearColor(scene.fogColor.x, scene.fogColor.y, scene.fogColor.z, 1f);
+        glClearColor(scene.clearColor.x, scene.clearColor.y, scene.clearColor.z, 1f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
         drawList(opaque, false);
 
         if (!transparent.isEmpty()) {
             sceneFb.copyDepthTo(depthCopy);
-            sceneFb.bind(); // copyDepthTo leaves the default framebuffer bound
+            sceneFb.bind();
 
             glActiveTexture(GL_TEXTURE0 + DEPTH_UNIT);
             glBindTexture(GL_TEXTURE_2D, depthCopy.depthTex);
@@ -64,13 +61,14 @@ public final class Renderer implements AutoCloseable {
 
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            drawList(transparent, true); // depth writes stay on so fog sees the water surface
+            drawList(transparent, true);
             glDisable(GL_BLEND);
         }
         sceneFb.unbind();
 
         postProcess(width, height);
     }
+
 
     private void sortEntities(Scene scene) {
         opaque.clear();
@@ -167,28 +165,8 @@ public final class Renderer implements AutoCloseable {
         glEnable(GL_DEPTH_TEST);
     }
 
-    // ---------------------------------------------------------------- setup / teardown
-
     private void ensureInit() {
-        if (fullscreenVao != 0) return;
-        fullscreenVao = glGenVertexArrays();
-
-        fogEffect = new PostEffect(
-                Shader.load("shaders/fullscreen.vert", "shaders/volumetric_fog.frag"),
-                (s, f) -> {
-                    Scene sc = f.scene;
-                    s.set("uInvViewProj", f.invViewProj)
-                            .set("uCameraPos", sc.camera.position)
-                            .set("uLightDir", sc.lightDir)
-                            .set("uFogColor", sc.fogColor)
-                            .set("uFogDensity", sc.fogDensity)
-                            .set("uFogHeightFalloff", sc.fogHeightFalloff)
-                            .set("uFogBaseHeight", sc.fogBaseHeight)
-                            .set("uNoiseScale", sc.fogNoiseScale)
-                            .set("uMaxDistance", sc.fogMaxDistance)
-                            .set("uTime", f.time);
-                });
-        effects.add(0, fogEffect);
+        if (fullscreenVao == 0) fullscreenVao = glGenVertexArrays();
     }
 
     private void ensureTargets(int w, int h) {
@@ -196,7 +174,6 @@ public final class Renderer implements AutoCloseable {
         closeTargets();
         sceneFb = new Framebuffer(w, h);
         depthCopy = Framebuffer.depthOnly(w, h);
-        // pingA / pingB are created on demand in postProcess()
     }
 
     private void closeTargets() {
@@ -210,9 +187,7 @@ public final class Renderer implements AutoCloseable {
     @Override
     public void close() {
         closeTargets();
-        if (fogEffect != null) fogEffect.close();
         if (fullscreenVao != 0) glDeleteVertexArrays(fullscreenVao);
-        fogEffect = null;
         fullscreenVao = 0;
     }
 }

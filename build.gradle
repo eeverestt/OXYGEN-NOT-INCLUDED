@@ -1,58 +1,14 @@
-plugins {
-    id 'java'
-    id 'application'
-}
+subprojects {
+    apply plugin: 'java'
 
-def lwjglVersion = '3.3.4'
-def jomlVersion  = '1.10.8'
+    repositories { mavenCentral() }
 
-def os   = System.getProperty('os.name').toLowerCase()
-def arch = System.getProperty('os.arch').toLowerCase()
-def natives = os.contains('win') ? 'natives-windows'
-        : os.contains('mac') ? ((arch.contains('aarch64') || arch.contains('arm')) ? 'natives-macos-arm64' : 'natives-macos')
-        : 'natives-linux'
+    java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
 
-repositories { mavenCentral() }
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
 
-dependencies {
-    implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
-    implementation 'org.lwjgl:lwjgl'
-    implementation 'org.lwjgl:lwjgl-glfw'
-    implementation 'org.lwjgl:lwjgl-opengl'
-    implementation 'org.lwjgl:lwjgl-stb'
-    runtimeOnly "org.lwjgl:lwjgl::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-glfw::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-opengl::$natives"
-    runtimeOnly "org.lwjgl:lwjgl-stb::$natives"
-    implementation "org.joml:joml:$jomlVersion"
-    implementation 'org.lwjgl:lwjgl-assimp'
-    runtimeOnly "org.lwjgl:lwjgl-assimp::$natives"
-    implementation 'org.lwjgl:lwjgl-openal'
-    runtimeOnly "org.lwjgl:lwjgl-openal::$natives"
-
-    def imguiVersion = '1.89.0'
-    def imguiNatives = os.contains('win') ? 'imgui-java-natives-windows'
-            : os.contains('mac') ? 'imgui-java-natives-macos'
-            : 'imgui-java-natives-linux'
-
-    implementation "io.github.spair:imgui-java-binding:$imguiVersion"
-    implementation "io.github.spair:imgui-java-lwjgl3:$imguiVersion"
-    runtimeOnly "io.github.spair:$imguiNatives:$imguiVersion"
-
-    implementation 'com.google.code.gson:gson:2.11.0'
-
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    test { useJUnitPlatform() }
-}
-
-java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
-
-application {
-    mainClass = 'demo.Demo'
-    applicationDefaultJvmArgs = [
-            '--enable-native-access=ALL-UNNAMED',
-            // '-Dorg.lwjgl.util.Debug=true',   // uncomment while debugging: LWJGL logs memory leaks and extra checks
-    ] + (os.contains('mac') ? ['-XstartOnFirstThread'] : [])
+    tasks.withType(Test).configureEach { useJUnitPlatform() }
 }

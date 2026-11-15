@@ -2,7 +2,6 @@ package engine.assets;
 
 import engine.gfx.Mesh;
 import engine.util.Color;
-import org.joml.Vector3f;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.assimp.AIColor4D;
 import org.lwjgl.assimp.AIFace;

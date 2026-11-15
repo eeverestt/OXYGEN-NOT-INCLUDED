@@ -1,13 +1,23 @@
+
 package demo;
 
 import engine.assets.Model;
 import engine.assets.ModelLoader;
-import engine.gfx.*;
-import engine.core.*;
-import engine.scene.*;
+import engine.audio.Audio;
+import engine.core.GameApp;
+import engine.core.Input;
+import engine.gfx.Material;
+import engine.gfx.Mesh;
+import engine.gfx.Renderer;
+import engine.gfx.Shader;
+import engine.gfx.Texture;
+import engine.scene.Camera;
+import engine.scene.Entity;
+import engine.scene.Scene;
 import game.OceanAmbienceDemo;
 import game.Player;
 import game.Raft;
+import post.FogEffect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,49 +39,45 @@ public class Demo extends GameApp {
     private Texture raftTop;
     private Texture raftSide;
 
+    private FogEffect fog;
+
     private Entity oceanEntity;
     private Raft raft;
     private OceanAmbienceDemo oceanSound;
+    private Model monkey;
 
     private final Player player = new Player();
     private boolean flying;
 
     private float frameTime;
-
-    private Model monkey;
+    private Audio audio;
 
     @Override
     protected void init() {
-        shader = Shader.load("shaders/engine/basic.vert", "shaders/engine/basic.frag");
+        audio = new Audio();
+        shader = Shader.load("shaders/basic.vert", "shaders/basic.frag");
         oceanShader = Shader.load("shaders/game/ocean.vert", "shaders/game/ocean.frag");
+
+        fog = new FogEffect().setColor(0x18151b);
+        renderer.effects().add(fog.effect());
+        scene.clearColor.set(fog.color);
 
         cubeMesh = Mesh.cube();
         oceanMesh = Mesh.grid(256, 200.0f, 1.0f);
 
-        Material oceanMaterial = new Material(oceanShader)
-                .tint(1.0f, 1.0f, 1.0f);
-
-        oceanEntity = new Entity(oceanMesh, oceanMaterial);
+        Material oceanMaterial = new Material(oceanShader).tint(1.0f, 1.0f, 1.0f);
+        oceanEntity = new Entity(oceanMesh, oceanMaterial).named("ocean");
         oceanEntity.transform.position.set(0.0f, -1.0f, 0.0f);
-
         scene.add(oceanEntity);
 
-        checker = Texture.checker(
-                8,
-                8,
-                new int[]{230, 120, 40},
-                new int[]{250, 220, 180}
-        );
+        checker = Texture.checker(8, 8, new int[]{230, 120, 40}, new int[]{250, 220, 180});
 
         for (int i = 0; i < 5; i++) {
-            Material mat = new Material(shader, checker)
-                    .tint(0.6f + 0.1f * i, 1f, 1.4f - 0.2f * i);
-
+            Material mat = new Material(shader, checker).tint(0.6f + 0.1f * i, 1f, 1.4f - 0.2f * i);
             spinners.add(scene.add(
                     new Entity(cubeMesh, mat)
                             .named("cube" + i)
-                            .at(i * 2.5f - 5f, 1f, -4f)
-            ));
+                            .at(i * 2.5f - 5f, 1f, -4f)));
         }
 
         monkey = ModelLoader.load("models/monkey.glb");
@@ -124,12 +130,7 @@ public class Demo extends GameApp {
         oceanSound.update(raft);
 
         for (int i = 0; i < spinners.size(); i++) {
-            spinners.get(i).transform.rotate(
-                    dt * (0.5f + i * 0.4f),
-                    0.3f,
-                    1f,
-                    0.2f
-            );
+            spinners.get(i).transform.rotate(dt * (0.5f + i * 0.4f), 0.3f, 1f, 0.2f);
         }
     }
 
@@ -140,6 +141,11 @@ public class Demo extends GameApp {
 
     @Override
     protected void cleanup() throws Exception {
+        try { if (raft != null) raft.close(); } catch (Exception e) { e.printStackTrace(); }
+        try { if (oceanSound != null) oceanSound.close(); } catch (Exception e) { e.printStackTrace(); }
+
+        if (monkey != null) monkey.close();
+
         if (shader != null) shader.close();
         if (oceanShader != null) oceanShader.close();
 
@@ -150,10 +156,8 @@ public class Demo extends GameApp {
         if (raftTop != null) raftTop.close();
         if (raftSide != null) raftSide.close();
 
-        if (raft != null) raft.close();
-        if (oceanSound != null) oceanSound.close();
-
-        if (monkey != null) monkey.close();
+        if (fog != null) fog.close();
+        if (audio != null) audio.close();
         renderer.close();
     }
 
@@ -161,3 +165,4 @@ public class Demo extends GameApp {
         new Demo().run("Abyssaline", 1280, 720);
     }
 }
+ 
