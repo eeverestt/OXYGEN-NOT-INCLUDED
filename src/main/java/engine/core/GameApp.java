@@ -13,7 +13,7 @@ public abstract class GameApp {
     protected abstract void init();
     protected abstract void update(float dt);
     protected abstract void render();
-    protected void cleanup() {}
+    protected void cleanup() throws Exception {}
 
     public final void run(String title, int width, int height) {
         window = new Window(title, width, height, true);
@@ -39,6 +39,8 @@ public abstract class GameApp {
                 window.swap();
             }
             cleanup();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
             if (audio != null) audio.close();
             window.close();

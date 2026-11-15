@@ -1,5 +1,7 @@
 package demo;
 
+import engine.assets.Model;
+import engine.assets.ModelLoader;
 import engine.gfx.*;
 import engine.core.*;
 import engine.scene.*;
@@ -36,6 +38,8 @@ public class Demo extends GameApp {
 
     private float frameTime;
 
+    private Model monkey;
+
     @Override
     protected void init() {
         shader = Shader.load("shaders/engine/basic.vert", "shaders/engine/basic.frag");
@@ -69,6 +73,10 @@ public class Demo extends GameApp {
                             .at(i * 2.5f - 5f, 1f, -4f)
             ));
         }
+
+        monkey = ModelLoader.load("models/monkey.glb");
+        Entity monkeyEntity = monkey.spawn(scene, shader);
+        monkeyEntity.at(0, 1, -3).scaled(1f);
 
         raftTop = Texture.load("textures/raft_topandbottom.png", true);
         raftSide = Texture.load("textures/raft_side.png", true);
@@ -131,7 +139,7 @@ public class Demo extends GameApp {
     }
 
     @Override
-    protected void cleanup() {
+    protected void cleanup() throws Exception {
         if (shader != null) shader.close();
         if (oceanShader != null) oceanShader.close();
 
@@ -145,6 +153,7 @@ public class Demo extends GameApp {
         if (raft != null) raft.close();
         if (oceanSound != null) oceanSound.close();
 
+        if (monkey != null) monkey.close();
         renderer.close();
     }
 
